@@ -9,12 +9,14 @@
         {% endfor %}
     {% endfor %}
     {% if favourites %}
+    <p class="section_label">Favourites</p>
     <div class="favourite_container">
         {% for preset in favourites %}
             <button type="button" class="favourite_button {% if preset.id==preset_selected %} selected {% endif %}" value="{{ preset.id }}" title="{{ preset.name }}">{{ preset.name }}</button>
         {% endfor %}
     </div>
     {% endif %}
+    <p class="section_label">Chain presets</p>
     {% if ns.tags %}
     <div class="tag_filter" role="group" aria-label="Filter presets by tag">
         <button type="button" class="tag_chip" data-tag="">All</button>

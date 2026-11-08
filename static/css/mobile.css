@@ -1,18 +1,30 @@
-@media only screen and (max-width: 500px) {
-    .effect_selector {
-        width:33%;
-    }
+/* Phones */
+@media (max-width: 520px) {
+  :root {
+    --gap: 10px;
+  }
 
-    .effect_selector_placeholder {
-        width:33%;
-    }
-    
-    .effect_title {
-        width:26%;            
-        font-size:large;    
-    }
+  .effect_header {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
 
-    .effect_onoff {
-        width:28%;
-    }
+  .effect_title {
+    flex: 1 1 auto;
+  }
+
+  /* selector goes on its own line under title + on/off */
+  .effect_selector,
+  .effect_selector_placeholder {
+    order: 3;
+    flex: 1 1 100%;
+  }
+
+  .effect_selector_placeholder {
+    display: none;
+  }
+
+  .preset_button {
+    min-height: 44px;
+  }
 }

@@ -3,11 +3,15 @@
 {% from 'macros/chain_preset_selector.html' import chain_preset_selector %}
 {% block content %}
 
-<div class="preset_container">    
+<div class="app">
+<aside class="sidebar">
+<div class="preset_container">
+    <div class="preset_buttons">
     <button id="preset_0" class="preset_button {% if config.preset == 0 %} selected {% endif %} {% if config.preset == 0 and preset_selected != 0 %} flash {% endif %}" name="preset" value="0">1</button>
     <button id="preset_1" class="preset_button {% if config.preset == 1 %} selected {% endif %} {% if config.preset == 1 and preset_selected != 0 %} flash {% endif %}" name="preset" value="1">2</button>
     <button id="preset_2" class="preset_button {% if config.preset == 2 %} selected {% endif %} {% if config.preset == 2 and preset_selected != 0 %} flash {% endif %}" name="preset" value="2">3</button>
     <button id="preset_3" class="preset_button {% if config.preset == 3 %} selected {% endif %} {% if config.preset == 3 and preset_selected != 0 %} flash {% endif %}" name="preset" value="3">4</button>
+    </div>
 
     <div class="preset_details">
         <div class="preset_name"><h2>{{ config.presetName }}</h2></div>
@@ -17,12 +21,24 @@
     <div id="chain_preset_container">        
         {{ chain_preset_selector(chain_presets, preset_selected) }}        
     </div>
+
+    <div class="system_tools">
+        <button class="tool_button" id="eject">
+            <img src="/img/icons/eject-line.png" title="Eject" />
+        </button>
+        <button class="tool_button" id="settings" onclick="location.href='/settings'">
+            <img src="/img/icons/settings.png" title="Settings" />
+        </button>
+    </div>
 </div>
+</aside>
+<div class="resizer" data-resize="sidebar" title="Drag to resize, double-click to reset"></div>
 
 {% if debug_logging == True %}
     <script src="/js/debug-log.js"></script>
 {% endif %}
 
+<main class="pedalboard">
 <div id="GATE_container" class="effect_container {% if config.gate["OnOff"] == 'Off' %} grayscale {% endif %}">
     {{ effect_container("GATE", config.gate, config.gates, False, pedal_presets["GATE"]) }}
 </div>
@@ -44,12 +60,7 @@
 <div id="REVERB_container" class="effect_container {% if config.reverb["OnOff"] == 'Off' %} grayscale {% endif %}">
     {{ effect_container("REVERB", config.reverb, config.reverbs, True, pedal_presets["REVERB"]) }}
 </div>
-<div class="system_tools">
-    <button class="tool_button" id="eject">
-        <img src="/img/icons/eject-line.png" title="Eject" />
-    </button>    
-    <button class="tool_button" id="settings" onclick="location.href='/settings'">
-        <img src="/img/icons/settings.png" title="Settings" />
-    </button>
+</main>
+<div class="resizer" data-resize="board" title="Drag to resize, double-click to reset"></div>
 </div>
 {% endblock %}
