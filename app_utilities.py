@@ -17,6 +17,8 @@ from lib.messages import msg_amp_connected, msg_attempting_connect
 
 def do_connect():
     # Start a separate thread to connect to the amp, keep user posted via SocketIO
+    # A manual connect also resumes automatic reconnection after an eject
+    amp.auto_connect = True
     socketio.emit(dict_connection_message,
                   {dict_message: msg_attempting_connect})
 

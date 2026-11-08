@@ -8,6 +8,7 @@
 #####################################################
 
 import threading
+import time
 
 import bluetooth
 from EventNotifier import Notifier
@@ -70,6 +71,12 @@ class SparkAmpServer:
         self.debug_logging = False
 
         self.connect_in_progress = False
+
+        # Reconnect automatically whenever the amp is reachable. Paused when
+        # the user ejects the amp, resumed by a manual connect.
+        self.auto_connect = getattr(config, 'auto_connect', True)
+        self.auto_connect_interval = getattr(
+            config, 'auto_connect_interval', 10)
 
         # Allow a user to disable the expression pedal temporarily via the web UI
         self.disable_expression_pedal = False
@@ -167,6 +174,16 @@ class SparkAmpServer:
         else:
             self.connect_in_progress = False
 
+    def start_auto_connect(self):
+        t = threading.Thread(target=self._auto_connect_loop, daemon=True)
+        t.start()
+
+    def _auto_connect_loop(self):
+        while True:
+            if self.auto_connect and not self.connected and not self.connect_in_progress:
+                self.connect()
+            time.sleep(self.auto_connect_interval)
+
     def log_debug_message(self, message):
         if self.debug_logging == True:
             self.socketio.emit(dict_update_debug_log,
@@ -176,6 +193,8 @@ class SparkAmpServer:
         return self.comms.send_state_request()
 
     def eject(self):
+        # The user released the amp on purpose: don't grab it straight back
+        self.auto_connect = False
         self.config = None
         self.listener.stop()
 

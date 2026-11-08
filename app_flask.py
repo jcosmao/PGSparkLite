@@ -90,7 +90,9 @@ def change_pedal_preset():
 @app.route('/connect', methods=['GET', 'POST'])
 def connect():
     if request.method == 'GET':
-        return render_template('connect.html')
+        if amp.connected and amp.config is not None:
+            return redirect(url_for('index'))
+        return render_template('connect.html', auto_connect=amp.auto_connect)
     else:
         do_connect()
         return dict_ok

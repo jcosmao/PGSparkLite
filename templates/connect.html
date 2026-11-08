@@ -4,6 +4,9 @@
 <div class="connect_div">    
     <h1>Let's get smart</h1>
     <p>Connect with your Spark Amp.</p>
+    {% if auto_connect %}
+    <p><small>Searching for your amp automatically, it will connect as soon as it is available.</small></p>
+    {% endif %}
     <button class="connect_button" id="connect">Connect</button>
     <br />
     <small><a target="_blank" href="https://www.positivegrid.com/spark/">Don't Have a Spark Device?</a></small>

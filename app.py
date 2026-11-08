@@ -17,6 +17,7 @@ Payload.max_decode_packets = 150
 socketio = SocketIO(app)
 
 amp = SparkAmpServer(socketio)
+amp.start_auto_connect()
 
 from app_flask import *
 from app_events import *
