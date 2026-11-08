@@ -1,0 +1,82 @@
+{
+    "PresetNumber": 127,
+    "UUID": "2FC5D9C6-BDC2-4C39-9CDF-E8CB9320A9B2",
+    "Name": "Surf Wipeout",
+    "Version": "0.7",
+    "Description": "Surf guitar - The Surfaris, Wipe Out: clean Twin with boost, slapback and drippy plate reverb",
+    "Icon": "icon.png",
+    "BPM": 160.0,
+    "Pedals": [
+        {
+            "Name": "bias.noisegate",
+            "IsOn": true,
+            "Parameters": [
+                0.1,
+                0.5,
+                1.0
+            ]
+        },
+        {
+            "Name": "BlueComp",
+            "IsOn": false,
+            "Parameters": [
+                0.5,
+                0.35,
+                0.35,
+                0.4
+            ]
+        },
+        {
+            "Name": "Booster",
+            "IsOn": true,
+            "Parameters": [
+                0.8
+            ]
+        },
+        {
+            "Name": "Twin",
+            "IsOn": true,
+            "Parameters": [
+                0.85,
+                0.75,
+                0.4,
+                0.55,
+                0.8
+            ]
+        },
+        {
+            "Name": "Tremolo",
+            "IsOn": false,
+            "Parameters": [
+                0.55,
+                0.5,
+                0.7
+            ]
+        },
+        {
+            "Name": "DelayMono",
+            "IsOn": true,
+            "Parameters": [
+                0.5,
+                0.15,
+                0.5,
+                0.4,
+                0.0
+            ]
+        },
+        {
+            "Name": "bias.reverb",
+            "IsOn": true,
+            "Parameters": [
+                0.75,
+                0.2,
+                0.2,
+                0.75,
+                0.8,
+                0.7,
+                0.6,
+                0.0
+            ]
+        }
+    ]
+}

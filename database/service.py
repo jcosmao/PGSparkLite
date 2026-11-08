@@ -1,6 +1,7 @@
-from lib.common import (dict_amp, dict_comp, dict_db_id, dict_delay,
+from lib.common import (dict_amp, dict_BPM, dict_comp, dict_db_id, dict_delay,
                         dict_drive, dict_gate, dict_mod, dict_Name, dict_OnOff,
-                        dict_Parameters, dict_reverb, dict_visible, dict_preset_id)
+                        dict_Parameters, dict_Pedals, dict_reverb, dict_UUID,
+                        dict_visible, dict_preset_id)
 from peewee import DoesNotExist
 
 from database.model import ChainPreset, PedalParameter, PedalPreset, database
@@ -100,6 +101,35 @@ def create_update_pedalpreset(preset_name, preset_id, effect):
     record.pedal_parameter.save()
 
     return record
+
+
+def chain_preset_uuid_exists(uuid):
+    return ChainPreset.select().where(ChainPreset.uuid == uuid).exists()
+
+
+def import_chain_preset(preset):
+    # preset is the output of lib.presetimport.convert_preset
+    with database.atomic():
+        pedal_ids = []
+        for pedal in preset[dict_Pedals]:
+            record = PedalParameter()
+            record.effect_name = pedal[dict_Name]
+            record.on_off = pedal[dict_OnOff]
+            record.store_parameters(pedal[dict_Parameters])
+            record.visible = True
+            record.save()
+            pedal_ids.append(record.id)
+
+        record = ChainPreset()
+        record.name = preset[dict_Name]
+        record.uuid = preset[dict_UUID]
+        record.bpm = preset[dict_BPM]
+        (record.gate_pedal, record.comp_pedal, record.drive_pedal,
+         record.amp_pedal, record.mod_pedal, record.delay_pedal,
+         record.reverb_pedal) = pedal_ids
+        record.save()
+
+        return record
 
 
 def get_chain_presets():

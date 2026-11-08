@@ -27,6 +27,33 @@
   checked {% endif %}/>
 </div>
 <br />
+<div class="setting_container">
+  <h3>Import Chain Presets</h3>
+  <p>
+    Import a folder of Spark preset JSON files (e.g. community collections
+    such as the Ignitron presets). Presets already imported (same UUID) are
+    skipped.
+  </p>
+  <form action="/chainpreset/import" method="post" enctype="multipart/form-data">
+    <input type="file" name="presets" webkitdirectory directory multiple />
+    <input type="submit" value="Import" />
+  </form>
+  {% if import_result %}
+  <p>
+    Imported: {{ import_result.imported|length }} &middot;
+    Skipped (already present): {{ import_result.skipped|length }} &middot;
+    Errors: {{ import_result.errors|length }}
+  </p>
+  {% if import_result.errors %}
+  <ul>
+    {% for file, reason in import_result.errors %}
+    <li>{{ file }}: {{ reason }}</li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+  {% endif %}
+</div>
+<br />
 <button class="tool_button" onclick="location.href='/'">
   <img src="/img/icons/back.png" title="Back" />
 </button>

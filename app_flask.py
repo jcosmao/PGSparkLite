@@ -10,6 +10,7 @@ from database.service import (create_update_chainpreset,
                               get_pedal_presets_by_effect_name,
                               verify_delete_chain_preset,
                               verify_delete_pedal_preset)
+from lib.presetimport import import_preset_files
 from lib.common import (dict_bias_noisegate_safe, dict_bpm, dict_bpm_change,
                         dict_chain_preset, dict_change_effect,
                         dict_change_pedal_preset, dict_effect,
@@ -165,13 +166,21 @@ def index():
 
 
 @app.route('/settings', methods=['GET'])
-def settings():
+def settings(import_result=None):
     if amp.connected == False:
         return redirect(url_for('connect'))
 
     return render_template('settings.html',
                            debug_logging=amp.debug_logging,
-                           disable_expression_pedal=amp.disable_expression_pedal)
+                           disable_expression_pedal=amp.disable_expression_pedal,
+                           import_result=import_result)
+
+
+@app.route('/chainpreset/import', methods=['POST'])
+def import_chain_presets():
+    uploads = request.files.getlist('presets')
+    result = import_preset_files((f.filename, f.read()) for f in uploads)
+    return settings(import_result=result)
 
 
 @app.route('/<path:path>')
