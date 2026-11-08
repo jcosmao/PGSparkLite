@@ -19,8 +19,10 @@ ENV DEBIAN_FRONTEND=noninteractive \
     FLASK_RUN_PORT=5000
 
 # python3-bluez provides the 'bluetooth' module (RFCOMM to the amp)
+# python3-dbus / python3-gi register the Spark app proxy with BlueZ
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 python3-pip python3-bluez \
+       python3-dbus python3-gi \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /wheels /wheels

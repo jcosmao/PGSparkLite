@@ -8,6 +8,7 @@
 #####################################################
 
 import os
+import socket
 import threading
 import time
 
@@ -42,10 +43,25 @@ from lib.messages import (msg_amp_connected, msg_amp_preset_stored,
 from lib.plugins.custom import CustomExpression
 from lib.plugins.onoff import OnOff
 from lib.plugins.volume import VolumePedal
+from lib.appproxysettings import AppProxySettings
+from lib.sparkappserver import SparkAppServer
 from lib.sparkdevices import SparkDevices
 from lib.sparklistener import SparkListener
 from lib.sparkpreset import SparkPreset
+from lib.sparkproxy import SparkProxy
 import config
+
+
+class AppMonitorNotifier:
+    """Forward only decoded app commands: the monitor stream must never
+    raise connection lost / corrupt preset for the real amp link."""
+
+    def __init__(self, notifier):
+        self.notifier = notifier
+
+    def raise_event(self, name, **kwargs):
+        if name == dict_callback:
+            self.notifier.raise_event(name, **kwargs)
 
 class SparkAmpServer:
     def __init__(self, socketio):
@@ -59,7 +75,9 @@ class SparkAmpServer:
 
         self.notifier = Notifier(
             [dict_callback, dict_connection_lost, dict_preset_corrupt])
-        self.notifier.subscribe(dict_callback, self.callback_event)
+        # Amp notifications and app commands arrive on two threads
+        self.callback_lock = threading.RLock()
+        self.notifier.subscribe(dict_callback, self._locked_callback_event)
         self.notifier.subscribe(dict_connection_lost,
                                 self.connection_lost_event)
         self.notifier.subscribe(dict_preset_corrupt, self.preset_corrupt_event)
@@ -81,6 +99,13 @@ class SparkAmpServer:
 
         # Allow a user to disable the expression pedal temporarily via the web UI
         self.disable_expression_pedal = False
+
+        # Relay the official Spark app through the Pi (see sparkproxy.py),
+        # configured in spark_app_proxy.json / the Settings page
+        self.app_settings = AppProxySettings(config=config)
+        self.amp_address = None
+        self.proxy = None
+        self.app_server = None
 
     def change_to_preset(self, hw_preset):
         cmd = self.msg.change_hardware_preset(hw_preset)
@@ -142,9 +167,21 @@ class SparkAmpServer:
                     if bt_name == 'Spark 40 Audio':
                         address = addr
 
-            self.bt_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
             print('connecing to address', address)
-            self.bt_sock.connect((address, 2))
+            self.amp_address = address
+            if not self.app_proxy and self.proxy is not None:
+                # Proxy switched off from the Settings page
+                self.proxy.close()
+                self.proxy = None
+            if self.app_proxy:
+                amp_sock = socket.socket(socket.AF_BLUETOOTH,
+                                         socket.SOCK_STREAM,
+                                         socket.BTPROTO_RFCOMM)
+                amp_sock.connect((address, 2))
+                self.start_proxy(amp_sock)
+            else:
+                self.bt_sock = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+                self.bt_sock.connect((address, 2))
 
             self.reader = SparkReadMessage()
             self.comms = SparkComms(self.bt_sock)
@@ -179,6 +216,57 @@ class SparkAmpServer:
         t = threading.Thread(target=self._auto_connect_loop, daemon=True)
         t.start()
 
+    def start_proxy(self, amp_sock):
+        if self.proxy is not None:
+            self.proxy.close()
+        self.proxy = SparkProxy(amp_sock)
+        self.proxy.start()
+        # PGSparkLite talks to the proxy as if it were the amp
+        self.bt_sock = self.proxy.local
+
+        # Follow what the Spark app changes, with the usual message parser
+        monitor = SparkListener(SparkReadMessage(),
+                                SparkComms(self.proxy.monitor),
+                                AppMonitorNotifier(self.notifier),
+                                stop_on_parse_error=False)
+        threading.Thread(target=monitor.start, daemon=True).start()
+
+    @property
+    def app_proxy(self):
+        return self.app_settings.enabled
+
+    def start_app_server(self):
+        if not self.app_proxy or self.app_server is not None:
+            return
+        self.app_server = SparkAppServer(
+            self.app_connection,
+            is_allowed=self.app_settings.is_allowed,
+            on_paired=self.app_settings.allow,
+            name=self.app_settings.bluetooth_name)
+        self.app_server.start()
+
+    def update_app_proxy(self, enabled, name, allowed_devices):
+        """Apply new settings from the Settings page."""
+        was_enabled = self.app_proxy
+        self.app_settings.update(enabled=enabled, name=name,
+                                 allowed_devices=allowed_devices)
+        if self.app_proxy:
+            self.start_app_server()
+            if self.app_server is not None:
+                self.app_server.set_name(self.app_settings.bluetooth_name)
+        if was_enabled != self.app_proxy and self.connected:
+            # Switch the amp link between direct and proxied
+            threading.Thread(target=self.connect, daemon=True).start()
+
+    def app_connection(self, sock):
+        proxy = self.proxy
+        if (not self.app_proxy or proxy is None or proxy.closed
+                or not self.connected):
+            print('Spark app connection refused: amp not connected')
+            sock.close()
+            return
+        proxy.attach_app(sock)
+
     def _auto_connect_loop(self):
         while True:
             if self.auto_connect and not self.connected and not self.connect_in_progress:
@@ -189,6 +277,10 @@ class SparkAmpServer:
         if self.debug_logging == True:
             self.socketio.emit(dict_update_debug_log,
                                {dict_message: message})
+
+    def _locked_callback_event(self, data):
+        with self.callback_lock:
+            self.callback_event(data)
 
     def initialise(self):
         return self.comms.send_state_request()

@@ -18,6 +18,7 @@ socketio = SocketIO(app)
 
 amp = SparkAmpServer(socketio)
 amp.start_auto_connect()
+amp.start_app_server()
 
 from app_flask import *
 from app_events import *

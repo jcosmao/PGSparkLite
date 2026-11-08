@@ -6,3 +6,4 @@ lib/plugins/__pycache__/*
 pgsparklite.db
 __pycache__/*
 venv/*data/
+spark_app_proxy.json

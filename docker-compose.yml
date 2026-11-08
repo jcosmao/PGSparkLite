@@ -14,5 +14,11 @@ services:
       AMP_BT_ADDRESS: ${AMP_BT_ADDRESS:-}
       # Web port (host networking: use 80 to drop the port from the URL)
       FLASK_RUN_PORT: ${PGSPARKLITE_PORT:-5000}
+      # Relay the official Spark app through this host (needs /run/dbus).
+      # Initial values only, then edited in Settings (data/spark_app_proxy.json)
+      SPARK_APP_PROXY: ${SPARK_APP_PROXY:-0}
+      SPARK_APP_PROXY_NAME: ${SPARK_APP_PROXY_NAME:-}
+      SPARK_APP_PROXY_DEVICES: ${SPARK_APP_PROXY_DEVICES:-}
     volumes:
       - ./data:/data
+      - /run/dbus:/run/dbus

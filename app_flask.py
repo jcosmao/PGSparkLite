@@ -216,7 +216,48 @@ def settings(import_result=None):
     return render_template('settings.html',
                            debug_logging=amp.debug_logging,
                            disable_expression_pedal=amp.disable_expression_pedal,
-                           import_result=import_result)
+                           import_result=import_result,
+                           app_proxy=app_proxy_view())
+
+
+def app_proxy_view():
+    """Settings page data for the Spark app proxy."""
+    view = dict(amp.app_settings.as_dict(), devices=[], adapter_name='',
+                pairing_open=False, error=None,
+                config_path=amp.app_settings.path)
+    server = amp.app_server
+    if server is None:
+        return view
+    try:
+        # The amp itself is paired too: it is not a phone
+        view['devices'] = [d for d in server.paired_devices()
+                           if d['address'] != (amp.amp_address or '').upper()]
+        view['adapter_name'] = server.adapter_name()
+        view['pairing_open'] = server.pairing_open
+    except Exception as e:
+        view['error'] = str(e)
+    # Allowed phones that are no longer paired still show up
+    known = {d['address'] for d in view['devices']}
+    for address in view['allowed_devices']:
+        if address not in known:
+            view['devices'].append({'address': address, 'name': '(not paired)',
+                                    'connected': False})
+    return view
+
+
+@app.route('/settings/app-proxy', methods=['POST'])
+def update_app_proxy():
+    amp.update_app_proxy(enabled=request.form.get('enabled') == 'on',
+                         name=request.form.get('name', ''),
+                         allowed_devices=request.form.getlist('allowed'))
+    return redirect(url_for('settings'))
+
+
+@app.route('/settings/app-proxy/pair', methods=['POST'])
+def pair_app_proxy():
+    if amp.app_server is not None:
+        amp.app_server.open_pairing(120)
+    return redirect(url_for('settings'))
 
 
 @app.route('/chainpreset/import', methods=['POST'])

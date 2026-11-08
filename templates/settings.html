@@ -55,6 +55,69 @@
   {% endif %}
 </div>
 <br />
+<div class="setting_container" id="app_proxy">
+  <h3>Spark app</h3>
+  <p>
+    Use the official Spark app (Android) at the same time as PGSparkLite:
+    connect the app to this device instead of the amp, it relays everything
+    to the amp. Only paired phones can connect.
+  </p>
+  <form action="/settings/app-proxy" method="post" class="app_proxy_form">
+    <label class="setting_row">
+      <input type="checkbox" name="enabled" {% if app_proxy.enabled %}checked{% endif %} />
+      Relay the Spark app
+    </label>
+
+    {% if app_proxy.enabled %}
+    <p class="setting_label">Allowed devices <span class="hint">(none checked: any paired device)</span></p>
+    {% if app_proxy.error %}
+    <p class="hint">Bluetooth unavailable: {{ app_proxy.error }}</p>
+    {% endif %}
+    <ul class="device_list">
+      {% for device in app_proxy.devices %}
+      <li>
+        <label>
+          <input type="checkbox" name="allowed" value="{{ device.address }}"
+            {% if device.address in app_proxy.allowed_devices %}checked{% endif %} />
+          <span class="device_name">{{ device.name or device.address }}</span>
+          <span class="hint">{{ device.address }}{% if device.connected %} &middot; connected{% endif %}</span>
+        </label>
+      </li>
+      {% else %}
+      <li class="hint">No paired device yet.</li>
+      {% endfor %}
+    </ul>
+
+    <p class="hint">The Android Spark app only lists devices named
+      "Spark 40 Audio": keep the default unless you know your app accepts another name.</p>
+    <label class="setting_row">
+      Bluetooth name
+      <input type="text" name="name" value="{{ app_proxy.name }}"
+        placeholder="Spark 40 Audio" />
+    </label>
+    {% else %}
+    <input type="hidden" name="name" value="{{ app_proxy.name }}" />
+    {% for address in app_proxy.allowed_devices %}
+    <input type="hidden" name="allowed" value="{{ address }}" />
+    {% endfor %}
+    {% endif %}
+
+    <input type="submit" value="Save" />
+  </form>
+
+  {% if app_proxy.enabled %}
+  <form action="/settings/app-proxy/pair" method="post" class="app_proxy_form">
+    {% if app_proxy.pairing_open %}
+    <p>Pairing open: pair your phone with <b>{{ app_proxy.adapter_name }}</b> now.
+      It is added to the allowed devices automatically.</p>
+    {% else %}
+    <input type="submit" value="Pair a new phone (2 min)" />
+    {% endif %}
+  </form>
+  {% endif %}
+  <p class="hint">Saved in {{ app_proxy.config_path }}</p>
+</div>
+<br />
 <button class="tool_button" onclick="location.href='/'">
   <img src="/img/icons/back.png" title="Back" />
 </button>

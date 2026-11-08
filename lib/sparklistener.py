@@ -13,8 +13,10 @@ from lib.common import dict_callback, dict_preset_corrupt, dict_connection_lost
 
 class SparkListener:
 
-    def __init__(self, reader, comms, notifier):
+    def __init__(self, reader, comms, notifier, stop_on_parse_error=True):
         self.listening = True
+        # The app monitor keeps going on a message it cannot decode
+        self.stop_on_parse_error = stop_on_parse_error
         self.reader = reader
         self.comms = comms
         self.notifier = notifier
@@ -51,6 +53,8 @@ class SparkListener:
 
             except Exception as err:
                 print('Message parsing error', err)
+                if not self.stop_on_parse_error:
+                    continue
                 self.notifier.raise_event(dict_preset_corrupt)
                 break
 

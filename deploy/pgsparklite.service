@@ -10,6 +10,11 @@ Wants=bluetooth.service
 # Served behind the nginx proxy (https://spark.lan), override in pgsparklite.env
 Environment=PGSPARKLITE_HOST=127.0.0.1
 Environment=PGSPARKLITE_PORT=5000
+# Relay the official Spark app through the Pi. Initial values only: once
+# changed in Settings they live in /storage/pgsparklite/data/spark_app_proxy.json
+Environment=SPARK_APP_PROXY=1
+Environment=SPARK_APP_PROXY_NAME=
+Environment=SPARK_APP_PROXY_DEVICES=
 EnvironmentFile=-/storage/pgsparklite/pgsparklite.env
 ExecStartPre=-/storage/.kodi/addons/service.system.docker/bin/docker rm -f pgsparklite
 ExecStart=/storage/.kodi/addons/service.system.docker/bin/docker run --rm --name pgsparklite \
@@ -17,6 +22,10 @@ ExecStart=/storage/.kodi/addons/service.system.docker/bin/docker run --rm --name
   -e AMP_BT_ADDRESS=${AMP_BT_ADDRESS} \
   -e FLASK_RUN_HOST=${PGSPARKLITE_HOST} \
   -e FLASK_RUN_PORT=${PGSPARKLITE_PORT} \
+  -e SPARK_APP_PROXY=${SPARK_APP_PROXY} \
+  -e SPARK_APP_PROXY_NAME=${SPARK_APP_PROXY_NAME} \
+  -e SPARK_APP_PROXY_DEVICES=${SPARK_APP_PROXY_DEVICES} \
+  -v /run/dbus:/run/dbus \
   -v /storage/pgsparklite/data:/data \
   pgsparklite:latest
 ExecStop=/storage/.kodi/addons/service.system.docker/bin/docker stop -t 10 pgsparklite

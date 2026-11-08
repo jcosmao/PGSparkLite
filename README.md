@@ -51,6 +51,46 @@ automatically as soon as it is reachable.
 - `AMP_BT_ADDRESS` is optional; without it the amp is found by Bluetooth
   discovery (slower).
 
+### Use the official Spark app at the same time
+
+PGSparkLite can also act as an amp for the official Spark app (Android):
+connect the app to the Pi instead of the amp, and PGSparkLite relays it to
+the amp over its own Bluetooth link. Both stay usable at once, the web UI
+follows the changes made in the app, and Bluetooth audio to the Pi (e.g.
+Kodi on LibreELEC) keeps working: the relay is just one more Bluetooth
+service next to audio.
+
+Set it up in **Settings → Spark app**:
+
+1. Tick *Relay the Spark app* and save.
+2. *Pair a new phone (2 min)*: the Pi becomes visible and accepts pairing
+   without a PIN for two minutes. Pair the phone from its Bluetooth settings.
+3. On the phone, forget the amp's own Bluetooth entry so the app picks the
+   Pi, then open the Spark app and connect.
+
+Only paired devices can connect, and outside the pairing window the Pi is
+not discoverable. Tick devices under *Allowed devices* to restrict the relay
+to them (a phone paired from Settings is added automatically).
+
+The settings are stored in `spark_app_proxy.json` next to the database
+(`/data` in Docker) and can be edited by hand:
+
+    {
+      "enabled": true,
+      "name": "",
+      "allowed_devices": ["FC:41:16:CE:C3:2C"]
+    }
+
+`name` is the Pi's Bluetooth name while the relay is on. It defaults to
+`Spark 40 Audio` (empty), which the Android Spark app requires to list the
+device; Bluetooth audio to the Pi keeps working under that name. Until the
+file exists, `SPARK_APP_PROXY`, `SPARK_APP_PROXY_NAME` and
+`SPARK_APP_PROXY_DEVICES` give the initial values. The container needs the
+host D-Bus socket (`/run/dbus`), already mounted in `docker-compose.yml` and
+`deploy/pgsparklite.service`.
+
+Tests: `python3 -m unittest discover tests`.
+
 ## User Instructions
 Guides to setting up PGSparkLite can be found in the Wiki: 
 
