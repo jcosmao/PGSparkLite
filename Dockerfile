@@ -14,7 +14,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 \
     PIP_BREAK_SYSTEM_PACKAGES=1 \
     PGSPARKLITE_DB=/data/pgsparklite.db \
-    FLASK_APP=app.py
+    FLASK_APP=app.py \
+    FLASK_RUN_HOST=0.0.0.0 \
+    FLASK_RUN_PORT=5000
 
 # python3-bluez provides the 'bluetooth' module (RFCOMM to the amp)
 RUN apt-get update \
@@ -30,4 +32,4 @@ COPY . .
 VOLUME /data
 EXPOSE 5000
 
-CMD ["python3", "-m", "flask", "run", "--host=0.0.0.0", "--port=5000"]
+CMD ["python3", "-m", "flask", "run"]

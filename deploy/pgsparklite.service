@@ -1,0 +1,27 @@
+# PGSparkLite in Docker - systemd unit for LibreELEC
+# Install: /storage/.config/system.d/pgsparklite.service
+[Unit]
+Description=PGSparkLite (Docker)
+Requires=service.system.docker.service
+After=service.system.docker.service bluetooth.service network-online.target
+Wants=bluetooth.service
+
+[Service]
+# Served behind the nginx proxy (https://spark.lan), override in pgsparklite.env
+Environment=PGSPARKLITE_HOST=127.0.0.1
+Environment=PGSPARKLITE_PORT=5000
+EnvironmentFile=-/storage/pgsparklite/pgsparklite.env
+ExecStartPre=-/storage/.kodi/addons/service.system.docker/bin/docker rm -f pgsparklite
+ExecStart=/storage/.kodi/addons/service.system.docker/bin/docker run --rm --name pgsparklite \
+  --network host --cap-add NET_ADMIN --cap-add NET_RAW \
+  -e AMP_BT_ADDRESS=${AMP_BT_ADDRESS} \
+  -e FLASK_RUN_HOST=${PGSPARKLITE_HOST} \
+  -e FLASK_RUN_PORT=${PGSPARKLITE_PORT} \
+  -v /storage/pgsparklite/data:/data \
+  pgsparklite:latest
+ExecStop=/storage/.kodi/addons/service.system.docker/bin/docker stop -t 10 pgsparklite
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

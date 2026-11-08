@@ -1,0 +1,22 @@
+# nginx reverse proxy (Docker) - systemd unit for LibreELEC
+# Install: /storage/.config/system.d/proxy.service
+[Unit]
+Description=nginx reverse proxy (Docker)
+Requires=service.system.docker.service
+After=service.system.docker.service network-online.target
+
+[Service]
+ExecStartPre=-/storage/.kodi/addons/service.system.docker/bin/docker rm -f proxy
+ExecStart=/storage/.kodi/addons/service.system.docker/bin/docker run --rm --name proxy \
+  --network host \
+  -v /storage/proxy/nginx.conf:/etc/nginx/nginx.conf:ro \
+  -v /storage/proxy/conf.d:/etc/nginx/conf.d:ro \
+  -v /storage/proxy/certs:/etc/nginx/certs:ro \
+  nginx:stable-alpine
+ExecReload=/storage/.kodi/addons/service.system.docker/bin/docker exec proxy nginx -s reload
+ExecStop=/storage/.kodi/addons/service.system.docker/bin/docker stop -t 10 proxy
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
