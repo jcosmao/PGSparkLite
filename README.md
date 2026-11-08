@@ -31,6 +31,26 @@ Each pedal in the chain can be switched on or off (even the amp!) via buttons on
 #### Collapsible Pedal Sections
 The pedal sections (gate, comp, drive, amp, mod, delay and reverb) can be minimised to reduce distractions and increase the space available in the browser window to reduce scrolling. Sections can be minimised regardless of whether they are on or off and their state is maintained when stored in a Chain Preset.
 
+## Docker (Raspberry Pi)
+
+PGSparkLite can run in Docker on a Raspberry Pi (64-bit or 32-bit OS) with
+Bluetooth enabled on the host (`bluetoothd` running).
+
+    git clone <this repo> && cd PGSparkLite
+    AMP_BT_ADDRESS=08:EB:ED:XX:XX:XX docker compose up -d --build
+
+Then open `http://<pi-address>:5000`. The app connects to the amp
+automatically as soon as it is reachable.
+
+- The container uses host networking: Bluetooth sockets are only available
+  in the host network namespace.
+- The database lives in `./data/pgsparklite.db`. To keep an existing one, copy
+  it there before the first start.
+- Import the bundled community presets:
+  `docker compose exec pgsparklite python3 -m utils.import_presets presets/community`
+- `AMP_BT_ADDRESS` is optional; without it the amp is found by Bluetooth
+  discovery (slower).
+
 ## User Instructions
 Guides to setting up PGSparkLite can be found in the Wiki: 
 

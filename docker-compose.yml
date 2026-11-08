@@ -1,0 +1,16 @@
+services:
+  pgsparklite:
+    build: .
+    image: pgsparklite:latest
+    container_name: pgsparklite
+    restart: unless-stopped
+    # Bluetooth sockets only exist in the host network namespace
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    environment:
+      # Set your amp address to skip discovery (see utils/find_spark_bt_address.py)
+      AMP_BT_ADDRESS: ${AMP_BT_ADDRESS:-}
+    volumes:
+      - ./data:/data

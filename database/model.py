@@ -1,8 +1,10 @@
+import os
+
 from peewee import (BooleanField, CharField, ForeignKeyField, IntegerField,
                     Model, SqliteDatabase)
 from playhouse.migrate import SqliteMigrator, migrate
 
-database = SqliteDatabase('pgsparklite.db')
+database = SqliteDatabase(os.environ.get('PGSPARKLITE_DB', 'pgsparklite.db'))
 
 
 class BaseModel(Model):

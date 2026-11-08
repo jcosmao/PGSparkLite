@@ -7,6 +7,7 @@
 # See https://github.com/paulhamsh/Spark-Parser
 #####################################################
 
+import os
 import threading
 import time
 
@@ -133,7 +134,7 @@ class SparkAmpServer:
                 print('self.bt_sock.close() failed')
 
         try:
-            address = config.amp_bt_address
+            address = os.environ.get('AMP_BT_ADDRESS') or config.amp_bt_address
             if not address:
                 bt_devices = bluetooth.discover_devices(lookup_names=True)
 

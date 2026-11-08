@@ -1,0 +1,9 @@
+.git
+.venv
+venv
+.devcontainer
+.vscode
+**/__pycache__
+*.pyc
+pgsparklite.db
+data
