@@ -5,9 +5,12 @@ from app_utilities import (change_effect, config_request, do_connect,
                            render_effect, update_pedal_state)
 from database.service import (create_update_chainpreset,
                               create_update_pedalpreset, database,
+                              edit_chain_preset,
                               get_chain_preset_by_id, get_chain_presets,
                               get_pedal_preset_by_id, get_pedal_presets,
                               get_pedal_presets_by_effect_name,
+                              rename_pedal_preset,
+                              toggle_chain_preset_star,
                               verify_delete_chain_preset,
                               verify_delete_pedal_preset)
 from lib.presetimport import import_preset_files
@@ -103,6 +106,44 @@ def delete_chain_preset():
                                preset_selected=0)
 
     return dict_error
+
+
+@app.route('/chainpreset/star', methods=['POST'])
+def star_chain_preset():
+    preset_id = int(request.form[dict_preset_id])
+    if toggle_chain_preset_star(preset_id) is None:
+        return dict_error
+
+    return render_template('chain_preset_selector.html',
+                           chain_presets=get_chain_presets(),
+                           preset_selected=preset_id)
+
+
+@app.route('/chainpreset/edit', methods=['POST'])
+def edit_chain_preset_endpoint():
+    preset_id = int(request.form[dict_preset_id])
+    if edit_chain_preset(preset_id, request.form.get(dict_name),
+                         request.form.get('tags', '')) is None:
+        return dict_error
+
+    return render_template('chain_preset_selector.html',
+                           chain_presets=get_chain_presets(),
+                           preset_selected=preset_id)
+
+
+@app.route('/pedalpreset/rename', methods=['POST'])
+def rename_pedal_preset_endpoint():
+    preset_id = int(request.form[dict_preset_id])
+    preset = rename_pedal_preset(preset_id, request.form.get(dict_name))
+    if preset is None:
+        return dict_error
+
+    return render_template('effect_footer.html',
+                           effect_name=preset.effect_name,
+                           effect_type=str(request.form[dict_effect_type]),
+                           presets=get_pedal_presets_by_effect_name(
+                               preset.effect_name),
+                           preset_selected=preset_id)
 
 
 @app.route('/pedalpreset/delete', methods=['POST'])

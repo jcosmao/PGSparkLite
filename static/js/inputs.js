@@ -203,6 +203,125 @@ $(document).ready(function () {
     );
   });
 
+  $(document).on("click", "#star_chain_preset", function () {
+    var preset_id = $("#chain_preset_selector").val();
+    if (preset_id == 0) {
+      return;
+    }
+
+    $.post("/chainpreset/star", { preset_id: preset_id }, function (result) {
+      $("#chain_preset_container").html(result);
+    });
+  });
+
+  // Rename / tag the selected chain preset
+  $(document).on("click", "#edit_chain_preset", function () {
+    var option = $("#chain_preset_selector option:selected");
+    if (option.val() == 0) {
+      return;
+    }
+    $("#chain_preset_edit_name").val(option.data("name"));
+    var tags = String(option.data("tags") || "");
+    $("#chain_preset_edit_tags").val(tags.split(",").filter(Boolean).join(", "));
+    $("#chain_preset_edit").prop("hidden", false);
+    $("#chain_preset_edit_name").trigger("focus");
+  });
+
+  $(document).on("click", "#chain_preset_edit_cancel", function () {
+    $("#chain_preset_edit").prop("hidden", true);
+  });
+
+  $(document).on("keydown", "#chain_preset_edit input", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      $("#chain_preset_edit_save").trigger("click");
+    } else if (e.key === "Escape") {
+      $("#chain_preset_edit_cancel").trigger("click");
+    }
+  });
+
+  $(document).on("click", "#chain_preset_edit_save", function () {
+    var preset_id = $("#chain_preset_selector").val();
+    var name = $.trim($("#chain_preset_edit_name").val());
+    if (preset_id == 0) {
+      return;
+    }
+    if (name == "") {
+      alerty.alert("You must enter a name!", { title: "Error", time: 3000 });
+      return;
+    }
+    var data = {
+      preset_id: preset_id,
+      name: name,
+      tags: $("#chain_preset_edit_tags").val(),
+    };
+    $.post("/chainpreset/edit", data, function (result) {
+      if (result == "error") {
+        alerty.alert("The chain preset could not be saved.", { title: "Error" });
+        return;
+      }
+      $("#chain_preset_container").html(result);
+      window.notify_user("The chain preset was updated successfully.");
+    });
+  });
+
+  // Filter the chain preset list by tag (remembered per browser)
+  var TAG_KEY = "pgspark.presetTag";
+
+  function currentTag() {
+    try {
+      return localStorage.getItem(TAG_KEY) || "";
+    } catch (e) {
+      return window.pgsparkPresetTag || "";
+    }
+  }
+
+  function setCurrentTag(tag) {
+    window.pgsparkPresetTag = tag;
+    try {
+      localStorage.setItem(TAG_KEY, tag);
+    } catch (e) { /* storage unavailable */ }
+  }
+
+  function applyTagFilter() {
+    var tag = currentTag();
+    var chips = $(".tag_chip");
+    if (tag && !chips.filter(function () { return $(this).data("tag") === tag; }).length) {
+      tag = ""; // tag no longer used by any preset
+    }
+    chips.each(function () {
+      $(this).toggleClass("selected", $(this).data("tag") === tag);
+    });
+    $("#chain_preset_selector option").each(function () {
+      var option = $(this);
+      if (option.val() == 0 || option.prop("selected")) {
+        option.prop("hidden", false).prop("disabled", false);
+        return;
+      }
+      var tags = String(option.data("tags") || "").split(",");
+      var visible = !tag || tags.indexOf(tag) >= 0;
+      option.prop("hidden", !visible).prop("disabled", !visible);
+    });
+  }
+  window.applyTagFilter = applyTagFilter;
+
+  $(document).on("click", ".tag_chip", function () {
+    setCurrentTag(String($(this).data("tag") || ""));
+    applyTagFilter();
+  });
+
+  applyTagFilter();
+  // The chain preset block is re-rendered after every preset action
+  $(document).ajaxComplete(applyTagFilter);
+
+  $(document).on("click", ".favourite_button", function () {
+    $("#chain_preset_selector").val($(this).val());
+    $(".favourite_button").removeClass("selected");
+    $(this).addClass("selected");
+    $("#loading").show();
+    $("#chain_preset_form").submit();
+  });
+
   $(document).on("change", "#chain_preset_selector", function () {
     var preset_id = $(this).val();
     if (preset_id == 0) {
@@ -235,6 +354,38 @@ $(document).ready(function () {
         } else {
           window.updatePedalPreset(effect_type, 0, name);
         }
+      }
+    );
+  });
+
+  $(document).on("click", ".rename_pedal_preset", function () {
+    var effect_type = $(this).data("type");
+    var selector = $("#" + effect_type + "_pedal_preset_selector");
+    var preset_id = selector.val();
+    if (preset_id == 0) {
+      return;
+    }
+    alerty.prompt(
+      "Rename the pedal preset.",
+      {
+        inputType: "text",
+        inputValue: $.trim(selector.find("option:selected").text()),
+      },
+      function (name) {
+        name = $.trim(name || "");
+        if (name == "") {
+          alerty.alert("You must enter a name!", { title: "Error", time: 3000 });
+          return;
+        }
+        var data = { effect_type: effect_type, preset_id: preset_id, name: name };
+        $.post("/pedalpreset/rename", data, function (result) {
+          if (result == "error") {
+            alerty.alert("The pedal preset could not be renamed.", { title: "Error" });
+            return;
+          }
+          $("#" + effect_type + "_footer").html(result);
+          window.notify_user("The pedal preset was renamed successfully.");
+        });
       }
     );
   });

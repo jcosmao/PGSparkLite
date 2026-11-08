@@ -4,7 +4,8 @@ from lib.common import (dict_amp, dict_BPM, dict_comp, dict_db_id, dict_delay,
                         dict_visible, dict_preset_id)
 from peewee import DoesNotExist
 
-from database.model import ChainPreset, PedalParameter, PedalPreset, database
+from database.model import (ChainPreset, PedalParameter, PedalPreset,
+                            database, parse_tags)
 
 
 def _cleanup_orphan_pedal(old_pedal, new_pedal):
@@ -130,6 +131,46 @@ def import_chain_preset(preset):
         record.save()
 
         return record
+
+
+def edit_chain_preset(id, name, tags):
+    """Rename a chain preset and replace its tags. None if not found or
+    the name is empty."""
+    name = (name or '').strip()
+    preset = get_chain_preset_by_id(id)
+    if preset is None or not name:
+        return None
+    preset.name = name
+    preset.set_tags(tags)
+    preset.save()
+    return preset
+
+
+def rename_pedal_preset(id, name):
+    name = (name or '').strip()
+    preset = get_pedal_preset_by_id(id)
+    if preset is None or not name:
+        return None
+    preset.name = name
+    preset.save()
+    return preset
+
+
+def get_chain_preset_tags():
+    """All tags used by chain presets, sorted."""
+    tags = set()
+    for preset in ChainPreset.select(ChainPreset.tags):
+        tags.update(parse_tags(preset.tags))
+    return sorted(tags)
+
+
+def toggle_chain_preset_star(id):
+    preset = get_chain_preset_by_id(id)
+    if preset is None:
+        return None
+    preset.starred = not preset.starred
+    preset.save()
+    return preset
 
 
 def get_chain_presets():

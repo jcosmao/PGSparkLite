@@ -1,18 +1,56 @@
 {% macro chain_preset_selector(chain_presets, preset_selected) %}
+    {% set chain_presets = chain_presets|list %}
+    {% set favourites = chain_presets|selectattr('starred')|list %}
+    {% set current_starred = favourites|selectattr('id', 'equalto', preset_selected)|list %}
+    {% set ns = namespace(tags=[]) %}
+    {% for preset in chain_presets %}
+        {% for tag in preset.tag_list() %}
+            {% if tag not in ns.tags %}{% set ns.tags = ns.tags + [tag] %}{% endif %}
+        {% endfor %}
+    {% endfor %}
+    {% if favourites %}
+    <div class="favourite_container">
+        {% for preset in favourites %}
+            <button type="button" class="favourite_button {% if preset.id==preset_selected %} selected {% endif %}" value="{{ preset.id }}" title="{{ preset.name }}">{{ preset.name }}</button>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if ns.tags %}
+    <div class="tag_filter" role="group" aria-label="Filter presets by tag">
+        <button type="button" class="tag_chip" data-tag="">All</button>
+        {% for tag in ns.tags|sort %}
+            <button type="button" class="tag_chip" data-tag="{{ tag }}">{{ tag }}</button>
+        {% endfor %}
+    </div>
+    {% endif %}
     <form id="chain_preset_form" action="/" method="POST">
     <select name="preset_id" id="chain_preset_selector" class="chain_preset_selector">
         <option value="0">No preset selected</option>
         {% for preset in chain_presets %}
-            <option value="{{ preset.id }}" {% if preset.id==preset_selected %} selected {% endif %}>
+            <option value="{{ preset.id }}" data-name="{{ preset.name }}" data-tags="{{ preset.tag_list()|join(',') }}" {% if preset.id==preset_selected %} selected {% endif %}>
                 {{ loop.index }}
+                {% if preset.starred %}&#9733;{% endif %}
                 {{ preset.name }}
             </option>
         {% endfor %}
     </select>
     <div class="chain_preset_buttons">
+        <button type="button" id="star_chain_preset" class="chain_preset_button star_button {% if current_starred %} starred {% endif %}" title="Star / unstar preset">&#9733;</button>
+        <button type="button" id="edit_chain_preset" class="chain_preset_button edit_button" title="Rename / tag preset">&#9998;</button>
         <button type="button" id="new_chain_preset" class="chain_preset_button"><img title="New Preset" src="/img/icons/add-line.png" /></button>
         <button type="button" id="save_chain_preset" class="chain_preset_button"><img title="Save Preset" src="/img/icons/save-line.png" /></button>
         <button type="button" id="delete_chain_preset" class="chain_preset_button"><img title="Delete Preset" src="/img/icons/delete-bin-line.png" /></button>
+    </div>
+    <div id="chain_preset_edit" class="chain_preset_edit" hidden>
+        <label>Name <input type="text" id="chain_preset_edit_name" maxlength="80" /></label>
+        <label>Tags <input type="text" id="chain_preset_edit_tags" placeholder="rock, clean, live" list="chain_preset_tag_list" /></label>
+        <datalist id="chain_preset_tag_list">
+            {% for tag in ns.tags|sort %}<option value="{{ tag }}"></option>{% endfor %}
+        </datalist>
+        <div class="chain_preset_edit_buttons">
+            <button type="button" id="chain_preset_edit_save" class="edit_save">Save</button>
+            <button type="button" id="chain_preset_edit_cancel" class="edit_cancel">Cancel</button>
+        </div>
     </div>
     </form>
 {% endmacro %}

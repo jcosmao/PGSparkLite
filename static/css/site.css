@@ -18,7 +18,7 @@ a:visited {
 .chain_preset_selector {
   display: inline-block;
   padding: 10px;
-  width: 66%;
+  width: 56%;
   background: #302f2f;
   color: white;
 }
@@ -30,6 +30,36 @@ a:visited {
   border: none;
   background-color: #302f2f;
   vertical-align: bottom;
+}
+
+.star_button {
+  color: grey;
+  font-size: 18px;
+  line-height: 18px;
+}
+
+.star_button.starred {
+  color: gold;
+}
+
+.favourite_container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.favourite_button {
+  flex: 1 1 22%;
+  min-width: 0;
+  padding: 10px 6px;
+  border: none;
+  border-radius: 8px;
+  color: black;
+  background-color: gold;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .chain_preset_buttons {
@@ -430,4 +460,56 @@ input[type="range"] {
     -o-transform: rotate(360deg);
     transform: rotate(360deg);
   }
+}
+
+/* Chain preset tags and rename */
+.tag_filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+
+.tag_chip {
+  padding: 2px 10px;
+  border: 1px solid #555;
+  border-radius: 12px;
+  background-color: #222;
+  color: #ccc;
+}
+
+.tag_chip.selected {
+  border-color: red;
+  background-color: red;
+  color: white;
+}
+
+.chain_preset_edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #444;
+  border-radius: 6px;
+}
+
+.chain_preset_edit[hidden] {
+  display: none;
+}
+
+.chain_preset_edit label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.chain_preset_edit_buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.edit_button {
+  font-size: 18px;
+  line-height: 1;
 }
