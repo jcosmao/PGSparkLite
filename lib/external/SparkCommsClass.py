@@ -10,11 +10,11 @@ class SparkComms:
             return False
 
     def read_it(self, dat_len):
-        try:
-            dat = self.bt_sock.recv(dat_len)
-            return dat
-        except:
-            return None        
+        dat = self.bt_sock.recv(dat_len)
+        if not dat:
+            # Peer closed the link: without this get_block spins forever
+            raise ConnectionError('connection closed')
+        return dat
 
     # helper functions to request preset and send acknowledgements
     def send_ack(self, seq, cmd):
@@ -85,11 +85,15 @@ class SparkComms:
 
             blk_len = blk[6]
             direction = blk[4:6]
-            seq = blk[18]
-            cmd = blk[20]
-            sub_cmd = blk[21]
 
-            if direction == b'\x53\xfe' and cmd == 0x01 and sub_cmd != 0x04:
+            # Short continuation blocks (e.g. final chunk tail) have no command header
+            has_header = len(blk) > 21
+            if has_header:
+                seq = blk[18]
+                cmd = blk[20]
+                sub_cmd = blk[21]
+
+            if has_header and direction == b'\x53\xfe' and cmd == 0x01 and sub_cmd != 0x04:
                 # the app sent a message that needs a response
                 self.send_ack(seq, cmd)
 
